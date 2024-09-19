@@ -13,13 +13,16 @@ contract XniswapV2Pair is ERC20 {
     address public tokenA;
     address public tokenB;
 
+    // Gas saving
     uint112 private reserveA;
     uint112 private reserveB;
+    uint32 private blockTimestampLast;
 
     uint256 constant MINIMUM_LIQUIDITY = 1000;
 
     // TODO: add events here
     event Burn(address indexed sender, uint256 amountA, uint256 amountB);
+    event Update(uint256 _reserveA, uint256 _reserveB, uint32 _blockTimestampLast);
 
     constructor(address _tokenA, address _tokenB) ERC20("XniswapV2 Pair", "XNIV2", 18) {
         tokenA = _tokenA;
@@ -28,13 +31,13 @@ contract XniswapV2Pair is ERC20 {
 
     /**
      * constant product formula:
-     *     (2.1) X * Y = L * L 
+     *     (2.1) X * Y = L * L
      *     X -> Reserve of TokenA
      *     Y -> Reserve of TokenB
      *     L -> Liquidity parameter
      */
     function mint() public {
-        (uint112 reserveA_, uint112 reserveB_) = getReserves();
+        (uint112 reserveA_, uint112 reserveB_,) = getReserves();
         uint256 balanceA = ERC20(tokenA).balanceOf(address(this));
         uint256 balanceB = ERC20(tokenB).balanceOf(address(this));
 
@@ -86,18 +89,24 @@ contract XniswapV2Pair is ERC20 {
         balanceA = ERC20(tokenA).balanceOf(address(this));
         balanceB = ERC20(tokenB).balanceOf(address(this));
 
-        (uint112 reserveA_, uint112 reserveB_) = getReserves();
+        (uint112 reserveA_, uint112 reserveB_,) = getReserves();
         _update(balanceA, balanceB, reserveA_, reserveB_);
 
         emit Burn(msg.sender, amountA, amountB);
     }
 
     // Utils
-    function getReserves() public view returns (uint112, uint112) {
-        return (reserveA, reserveB);
+    function getReserves() public view returns (uint112, uint112, uint32) {
+        return (reserveA, reserveB, blockTimestampLast);
     }
 
     // private functions
 
-    function _update(uint256 _balanceA, uint256 _balanceB, uint112 _reserveA, uint112 _reserveB) private {}
+    function _update(uint256 _balanceA, uint256 _balanceB, uint112, uint112) private {
+        reserveA = uint112(_balanceA);
+        reserveB = uint112(_balanceB);
+        blockTimestampLast = uint32(block.timestamp);
+
+        emit Update(reserveA, reserveB, blockTimestampLast);
+    }
 }
