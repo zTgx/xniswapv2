@@ -23,6 +23,7 @@ contract XniswapV2Pair is ERC20 {
     // TODO: add events here
     event Burn(address indexed sender, uint256 amountA, uint256 amountB);
     event Update(uint256 _reserveA, uint256 _reserveB, uint32 _blockTimestampLast);
+    event Swap(address indexed sender, uint256 amountAOut, uint256 amountBOut, address indexed to);
 
     constructor(address _tokenA, address _tokenB) ERC20("XniswapV2 Pair", "XNIV2", 18) {
         tokenA = _tokenA;
@@ -95,13 +96,32 @@ contract XniswapV2Pair is ERC20 {
         emit Burn(msg.sender, amountA, amountB);
     }
 
+    function swap(uint256 amountAOut, uint256 amountBOut, address to) public {
+        require(amountAOut != 0 || amountBOut != 0, "InsufficientOutputAmount");
+
+        (uint112 reserveA_, uint112 reserveB_,) = getReserves();
+        require(amountAOut <= reserveA_ && amountBOut <= reserveB_, "InsufficientLiquidity");
+
+        uint256 balanceA = ERC20(tokenA).balanceOf(address(this)) - amountAOut;
+        uint256 balanceB = ERC20(tokenB).balanceOf(address(this)) - amountBOut;
+
+        // the product of reserves after a swap must be equal or greater than that before the swap
+        require(balanceA * balanceB >= uint256(reserveA_) * uint256(reserveB_), "Invalid");
+
+        _update(balanceA, balanceB, reserveA_, reserveB_);
+
+        if (amountAOut > 0) SafeTransferLib.safeTransfer(ERC20(tokenA), to, amountAOut);
+        if (amountBOut > 0) SafeTransferLib.safeTransfer(ERC20(tokenB), to, amountBOut);
+
+        emit Swap(msg.sender, amountAOut, amountBOut, to);
+    }
+
     // Utils
     function getReserves() public view returns (uint112, uint112, uint32) {
         return (reserveA, reserveB, blockTimestampLast);
     }
 
     // private functions
-
     function _update(uint256 _balanceA, uint256 _balanceB, uint112, uint112) private {
         reserveA = uint112(_balanceA);
         reserveB = uint112(_balanceB);
