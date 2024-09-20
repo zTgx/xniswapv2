@@ -106,7 +106,7 @@ contract XniswapV2Pair is ERC20 {
         uint256 balanceB = ERC20(tokenB).balanceOf(address(this)) - amountBOut;
 
         // the product of reserves after a swap must be equal or greater than that before the swap
-        require(balanceA * balanceB >= uint256(reserveA_) * uint256(reserveB_), "Invalid");
+        require(balanceA * balanceB >= uint256(reserveA_) * uint256(reserveB_), "Invalid L(L means L * L = X * Y)");
 
         _update(balanceA, balanceB, reserveA_, reserveB_);
 
