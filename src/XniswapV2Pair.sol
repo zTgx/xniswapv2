@@ -25,7 +25,11 @@ contract XniswapV2Pair is ERC20 {
     event Update(uint256 _reserveA, uint256 _reserveB, uint32 _blockTimestampLast);
     event Swap(address indexed sender, uint256 amountAOut, uint256 amountBOut, address indexed to);
 
-    constructor(address _tokenA, address _tokenB) ERC20("XniswapV2 Pair", "XNIV2", 18) {
+    constructor(address _tokenA, address _tokenB) ERC20("XniswapV2 Pair", "XNIV2", 18) {}
+
+    function initialize(address _tokenA, address _tokenB) public {
+        require(tokenA == address(0) && tokenB == address(0), "Already Initialized");
+
         tokenA = _tokenA;
         tokenB = _tokenB;
     }
