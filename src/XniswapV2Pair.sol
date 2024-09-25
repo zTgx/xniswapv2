@@ -21,7 +21,7 @@ contract XniswapV2Pair is ERC20 {
     uint256 constant MINIMUM_LIQUIDITY = 1000;
 
     // TODO: add events here
-    event Burn(address indexed sender, uint256 amountA, uint256 amountB);
+    event Burn(address indexed sender, uint256 amountA, uint256 amountB, address indexed to);
     event Update(uint256 _reserveA, uint256 _reserveB, uint32 _blockTimestampLast);
     event Swap(address indexed sender, uint256 amountAOut, uint256 amountBOut, address indexed to);
 
@@ -75,21 +75,22 @@ contract XniswapV2Pair is ERC20 {
         _update(balanceA, balanceB, reserveA_, reserveB_);
     }
 
-    function burn() public {
+    //NOTE: sender send liquidity to contract, then burn
+    function burn(address to) public {
         uint256 balanceA = ERC20(tokenA).balanceOf(address(this));
         uint256 balanceB = ERC20(tokenB).balanceOf(address(this));
 
-        uint256 liquidity = balanceOf[msg.sender];
+        uint256 liquidity = balanceOf[address(this)];
 
         uint256 amountA = liquidity * (balanceA / totalSupply);
         uint256 amountB = liquidity * (balanceB / totalSupply);
 
         require(amountA > 0 && amountB > 0, "XniswapV2: INSUFFICIENT_LIQUIDITY_BURNED");
 
-        _burn(msg.sender, liquidity);
+        _burn(address(this), liquidity);
 
-        SafeTransferLib.safeTransfer(ERC20(tokenA), msg.sender, amountA);
-        SafeTransferLib.safeTransfer(ERC20(tokenB), msg.sender, amountB);
+        SafeTransferLib.safeTransfer(ERC20(tokenA), to, amountA);
+        SafeTransferLib.safeTransfer(ERC20(tokenB), to, amountB);
 
         balanceA = ERC20(tokenA).balanceOf(address(this));
         balanceB = ERC20(tokenB).balanceOf(address(this));
@@ -97,7 +98,7 @@ contract XniswapV2Pair is ERC20 {
         (uint112 reserveA_, uint112 reserveB_,) = getReserves();
         _update(balanceA, balanceB, reserveA_, reserveB_);
 
-        emit Burn(msg.sender, amountA, amountB);
+        emit Burn(msg.sender, amountA, amountB, to);
     }
 
     function swap(uint256 amountAOut, uint256 amountBOut, address to) public {

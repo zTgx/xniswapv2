@@ -20,6 +20,9 @@ library XniswapV2Lib {
     {
         (address tokenA_, address tokenB_) = sortPair(tokenA, tokenB);
 
+        // create2:
+        // https://eips.ethereum.org/EIPS/eip-1014
+        // keccak256( 0xff ++ address ++ salt ++ keccak256(init_code))
         pairAddress = address(
             uint160(
                 uint256(
@@ -46,6 +49,7 @@ library XniswapV2Lib {
         (reserveA, reserveB) = tokenA == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
     }
 
+    // this function calculates output amount based on input amount and pair reserves.
     function quote(uint256 amountIn, uint256 reserveIn, uint256 reserveOut) public pure returns (uint256 amountOut) {
         if (amountIn == 0) revert InsufficientAmount();
         if (reserveIn == 0 || reserveOut == 0) revert InsufficientLiquidity();

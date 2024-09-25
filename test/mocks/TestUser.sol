@@ -21,6 +21,6 @@ contract TestUser {
     }
 
     function removeLiquidity(address pairAddress_) public {
-        XniswapV2Pair(pairAddress_).burn();
+        XniswapV2Pair(pairAddress_).burn(msg.sender);
     }
 }
