@@ -101,7 +101,7 @@ contract XniswapV2Pair is ERC20 {
         emit Burn(msg.sender, amountA, amountB, to);
     }
 
-    function swap(uint256 amountAOut, uint256 amountBOut, address to) public {
+    function swap(uint256 amountAOut, uint256 amountBOut, address to, bytes calldata data) public nonReentrant {
         require(amountAOut != 0 || amountBOut != 0, "InsufficientOutputAmount");
 
         (uint112 reserveA_, uint112 reserveB_,) = getReserves();

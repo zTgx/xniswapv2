@@ -10,6 +10,7 @@ import "./IXniswapV2Factory.sol";
 contract XniswapV2Router {
     error InsufficientAAmount();
     error InsufficientBAmount();
+    error SafeTransferFailed();
 
     IXniswapV2Factory factory;
 
@@ -82,6 +83,60 @@ contract XniswapV2Router {
                 if (amountAOptimal <= amountAMin) revert InsufficientAAmount();
                 (amountA, amountB) = (amountAOptimal, amountBDeposite);
             }
+        }
+    }
+
+    // Swaps an exact input amount (amountIn) for some output amount not smaller than amountOutMin.
+    function swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] calldata path, address to)
+        public
+        returns (uint256[] memory amounts)
+    {
+        amounts = XniswapV2Lib.getAmountsOut(address(factory), amountIn, path);
+
+        require(amounts[amounts.length - 1] >= amountOutMin, "InsufficientOutputAmount");
+
+        _safeTransferFrom(
+            path[0], msg.sender, XniswapV2Lib.getPairAddress(address(factory), path[0], path[1]), amounts[0]
+        );
+
+        _swap(amounts, path, to);
+    }
+
+    //Swapping unknown amount of input tokens for exact amount of output tokens.
+    //This is an interesting use case and it’s probably not used very often but it’s still possible.
+    function swapTokensForExactTokens(uint256 amountOut, uint256 amountInMax, address[] calldata path, address to)
+        public
+        returns (uint256[] memory amounts)
+    {
+        amounts = XniswapV2Lib.getAmountsIn(address(factory), amountOut, path);
+        require(amounts[amounts.length - 1] <= amountInMax, "ExcessiveInputAmount");
+
+        _safeTransferFrom(
+            path[0], msg.sender, XniswapV2Lib.getPairAddress(address(factory), path[0], path[1]), amounts[0]
+        );
+
+        _swap(amounts, path, to);
+    }
+
+    function _swap(uint256[] memory amounts, address[] memory path, address to_) internal {
+        for (uint256 i; i < path.length; i++) {
+            (address input, address output) = (path[i], path[i + 1]);
+            (address token0,) = XniswapV2Lib.sortPair(input, output);
+            uint256 amountOut = amounts[i + 1];
+            (uint256 amount0Out, uint256 amount1Out) =
+                input == token0 ? (uint256(0), amountOut) : (amountOut, uint256(0));
+
+            address to = i < path.length - 2 ? XniswapV2Lib.getPairAddress(address(factory), output, path[i + 2]) : to_;
+
+            IXniswapV2Pair(XniswapV2Lib.getPairAddress(address(factory), input, output)).swap(amount0Out, amount1Out, to, "");
+        }
+    }
+
+    function _safeTransferFrom(address token, address from, address to, uint256 value) private {
+        (bool success, bytes memory data) =
+            token.call(abi.encodeWithSignature("transferFrom(address,address,uint256)", from, to, value));
+        if (!success || (data.length != 0 && !abi.decode(data, (bool)))) {
+            revert SafeTransferFailed();
         }
     }
 }
