@@ -2,14 +2,16 @@
 pragma solidity ^0.8.13;
 
 import "solmate/tokens/ERC20.sol";
+import {ReentrancyGuard} from "solmate/utils/ReentrancyGuard.sol";
 import "solmate/utils/FixedPointMathLib.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
+import "./IXniswapV2Callee.sol";
 
 function min(uint256 a, uint256 b) pure returns (uint256) {
     return a < b ? a : b;
 }
 
-contract XniswapV2Pair is ERC20 {
+contract XniswapV2Pair is ERC20, ReentrancyGuard {
     address public tokenA;
     address public tokenB;
 
@@ -21,6 +23,7 @@ contract XniswapV2Pair is ERC20 {
     uint256 constant MINIMUM_LIQUIDITY = 1000;
 
     // TODO: add events here
+    event Mint(address indexed sender, uint256 amountA, uint256 amountB);
     event Burn(address indexed sender, uint256 amountA, uint256 amountB, address indexed to);
     event Update(uint256 _reserveA, uint256 _reserveB, uint32 _blockTimestampLast);
     event Swap(address indexed sender, uint256 amountAOut, uint256 amountBOut, address indexed to);
@@ -41,7 +44,7 @@ contract XniswapV2Pair is ERC20 {
      *     Y -> Reserve of TokenB
      *     L -> Liquidity parameter
      */
-    function mint() public {
+    function mint(address to) public {
         (uint112 reserveA_, uint112 reserveB_,) = getReserves();
         uint256 balanceA = ERC20(tokenA).balanceOf(address(this));
         uint256 balanceB = ERC20(tokenB).balanceOf(address(this));
@@ -69,10 +72,12 @@ contract XniswapV2Pair is ERC20 {
 
         require(liquidity > 0, "Insufficient liquidity minted");
 
-        // Issue liquidity to msg.sender
-        _mint(msg.sender, liquidity);
+        // Issue liquidity to `to`
+        _mint(to, liquidity);
 
         _update(balanceA, balanceB, reserveA_, reserveB_);
+
+        emit Mint(to, amountA, amountB);
     }
 
     //NOTE: sender send liquidity to contract, then burn
@@ -117,6 +122,7 @@ contract XniswapV2Pair is ERC20 {
 
         if (amountAOut > 0) SafeTransferLib.safeTransfer(ERC20(tokenA), to, amountAOut);
         if (amountBOut > 0) SafeTransferLib.safeTransfer(ERC20(tokenB), to, amountBOut);
+        if (data.length > 0) IXniswapV2Callee(to).call(msg.sender, amountAOut, amountBOut, data);
 
         emit Swap(msg.sender, amountAOut, amountBOut, to);
     }

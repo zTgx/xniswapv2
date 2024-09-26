@@ -128,7 +128,9 @@ contract XniswapV2Router {
 
             address to = i < path.length - 2 ? XniswapV2Lib.getPairAddress(address(factory), output, path[i + 2]) : to_;
 
-            IXniswapV2Pair(XniswapV2Lib.getPairAddress(address(factory), input, output)).swap(amount0Out, amount1Out, to, "");
+            IXniswapV2Pair(XniswapV2Lib.getPairAddress(address(factory), input, output)).swap(
+                amount0Out, amount1Out, to, ""
+            );
         }
     }
 

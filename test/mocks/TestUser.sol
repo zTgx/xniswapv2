@@ -17,7 +17,7 @@ contract TestUser {
         ERC20(tokenAAddress_).transfer(pairAddress_, amountA_);
         ERC20(tokenBAddress_).transfer(pairAddress_, amountB_);
 
-        XniswapV2Pair(pairAddress_).mint();
+        XniswapV2Pair(pairAddress_).mint(address(this));
     }
 
     function removeLiquidity(address pairAddress_) public {
