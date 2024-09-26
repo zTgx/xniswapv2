@@ -57,6 +57,11 @@ library XniswapV2Lib {
         return (amountIn * reserveOut) / reserveIn;
     }
 
+    //reserveIn : the amount of token A in the pool
+    //reserveOut: the amount of token B in the pool
+    //amountIn  : Need to deposite <amountIn of token A>
+    //amountOut : the desired amount of token B to receive
+    // given an output amount of an asset and pair reserves, returns a required input amount of the other asset.
     function getAmountIn(uint256 amountOut, uint256 reserveIn, uint256 reserveOut) public pure returns (uint256) {
         if (amountOut == 0) revert InsufficientAmount();
         if (reserveIn == 0 || reserveOut == 0) revert InsufficientLiquidity();
@@ -65,5 +70,54 @@ library XniswapV2Lib {
         uint256 denominator = (reserveOut - amountOut) * 997;
 
         return (numerator / denominator) + 1;
+    }
+
+    // given an input amount of an asset and pair reserves,
+    // returns the maximum output amount of the other asset.
+    function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut) public pure returns (uint256) {
+        if (amountIn == 0) revert InsufficientAmount();
+        if (reserveIn == 0 || reserveOut == 0) revert InsufficientLiquidity();
+
+        uint256 amountInWithFee = amountIn * 997;
+        uint256 numerator = amountInWithFee * reserveOut;
+        uint256 denominator = (reserveIn * 1000) + amountInWithFee;
+
+        return numerator / denominator;
+    }
+
+    function getAmountsIn(
+        address factory,
+        uint256 amountOut,
+        address[] memory path //memory - variable is in memory and it exists while a function is being called
+    ) public returns (uint256[] memory) {
+        require(path.length >= 2, "Invalid Path");
+
+        // Index from 0
+        uint256[] memory amounts = new uint256[](path.length);
+        amounts[amounts.length - 1] = amountOut;
+
+        for (uint256 i = path.length - 1; i > 0; i--) {
+            (uint256 reserveIn, uint256 reserveOut) = getReserves(factory, path[i - 1], path[i]);
+            amounts[i - 1] = getAmountIn(amounts[i], reserveIn, reserveOut);
+        }
+
+        return amounts;
+    }
+
+    function getAmountsOut(address factory, uint256 amountIn, address[] memory path)
+        public
+        returns (uint256[] memory)
+    {
+        require(path.length >= 2, "Invalid Path");
+
+        uint256[] memory amounts = new uint256[](path.length);
+        amounts[0] = amountIn;
+
+        for (uint256 i; i < path.length - 1; i++) {
+            (uint256 reserveIn, uint256 reserveOut) = getReserves(factory, path[i], path[i + 1]);
+            amounts[i + 1] = getAmountOut(amounts[i], reserveIn, reserveOut);
+        }
+
+        return amounts;
     }
 }
