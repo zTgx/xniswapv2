@@ -6,10 +6,7 @@ import {ReentrancyGuard} from "solmate/utils/ReentrancyGuard.sol";
 import "solmate/utils/FixedPointMathLib.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 import "./IXniswapV2Callee.sol";
-
-function min(uint256 a, uint256 b) pure returns (uint256) {
-    return a < b ? a : b;
-}
+import "./XniswapV2Lib.sol";
 
 contract XniswapV2Pair is ERC20, ReentrancyGuard {
     address public tokenA;
@@ -61,10 +58,10 @@ contract XniswapV2Pair is ERC20, ReentrancyGuard {
         } else {
             /**
              * case1: b / a = B / A
-             *             case2: b / a > B / A
-             *             case3: b / a < B / A
+             * case2: b / a > B / A
+             * case3: b / a < B / A
              */
-            liquidity = min((amountA * totalSupply) / reserveA_, (amountB * totalSupply) / reserveB_);
+            liquidity = XniswapV2Lib.min((amountA * totalSupply) / reserveA_, (amountB * totalSupply) / reserveB_);
         }
 
         // q = min(a / A, b / B)
