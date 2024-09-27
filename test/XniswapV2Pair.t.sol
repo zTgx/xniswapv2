@@ -20,7 +20,7 @@ contract XniswapV2PairTest is Test {
         tokenB.mint(10 ether, address(this));
     }
 
-    function assertReserves(uint112 expectedReserveA, uint112 expectedReserveB) internal view {
+    function getReservesWorks(uint112 expectedReserveA, uint112 expectedReserveB) internal view {
         (uint112 reserveA, uint112 reserveB,) = pair.getReserves();
         assertEq(reserveA, expectedReserveA, "unexpected reserveA");
         assertEq(reserveB, expectedReserveB, "unexpected reserveB");

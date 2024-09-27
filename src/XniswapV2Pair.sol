@@ -7,8 +7,10 @@ import "solmate/utils/FixedPointMathLib.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 import "./IXniswapV2Callee.sol";
 import "./XniswapV2Lib.sol";
+import {console} from "forge-std/console.sol";
 
 contract XniswapV2Pair is ERC20, ReentrancyGuard {
+    address public factory;
     address public tokenA;
     address public tokenB;
 
@@ -25,10 +27,17 @@ contract XniswapV2Pair is ERC20, ReentrancyGuard {
     event Update(uint256 _reserveA, uint256 _reserveB, uint32 _blockTimestampLast);
     event Swap(address indexed sender, uint256 amountAOut, uint256 amountBOut, address indexed to);
 
-    constructor(address _tokenA, address _tokenB) ERC20("XniswapV2 Pair", "XNIV2", 18) {}
+    constructor(address _tokenA, address _tokenB) ERC20("XniswapV2 Pair", "XNIV2", 18) {
+        factory = msg.sender;
+    }
 
     function initialize(address _tokenA, address _tokenB) public {
-        require(tokenA == address(0) && tokenB == address(0), "Already Initialized");
+        console.log(">>> msg.sender: ", msg.sender);
+        console.log(">>> factory   : ", factory);
+
+        require(msg.sender == factory, "XniswapV2: FORBIDDEN");
+
+        console.log(">>> XniswapV2Pair initialized!");
 
         tokenA = _tokenA;
         tokenB = _tokenB;
