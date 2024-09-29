@@ -13,6 +13,15 @@ library XniswapV2Lib {
         return a < b ? a : b;
     }
 
+    function sortTokenAddress(address tokenA, address tokenB)
+        internal
+        pure
+        returns (address tokenA_, address tokenB_)
+    {
+        (tokenA_, tokenB_) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
+        return (tokenA_, tokenB_);
+    }
+
     function sortPair(address tokenA, address tokenB) internal pure returns (address, address) {
         return tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
     }
