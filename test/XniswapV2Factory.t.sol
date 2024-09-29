@@ -16,7 +16,11 @@ contract XniswapV2FactoryTest is Test {
         factory = new XniswapV2Factory();
 
         token0 = new ERC20Mintable("Token A", "TKNA");
+        token0.mint(10 ether, address(this));
+        console.log(">>> balance of address(this): ", token0.balanceOf(address(this)));
+
         token1 = new ERC20Mintable("Token B", "TKNB");
+        token1.mint(10 ether, address(this));
     }
 
     function testNewPairWorks() public {

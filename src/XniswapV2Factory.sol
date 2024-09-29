@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import {console} from "forge-std/console.sol";
-import "./IXniswapV2Pair.sol";
 import "./XniswapV2Pair.sol";
 
 contract XniswapV2Factory {
@@ -11,7 +10,7 @@ contract XniswapV2Factory {
 
     event PairCreated(address indexed token0, address indexed token1, address pair, uint256);
 
-    function newPair(address tokenA, address tokenB) public returns (address pair) {
+    function newPair(address tokenA, address tokenB) public returns (address pairAddress) {
         require(tokenA != tokenB, "Identical Address");
 
         console.log(">>> tokenA: ", tokenA);
@@ -28,24 +27,27 @@ contract XniswapV2Factory {
         bytes32 salt = keccak256(abi.encodePacked(tokenA_, tokenB_));
         // console.logBytes32(salt);
 
-        assembly {
-            pair := create2(0, add(bytecode, 32), mload(bytecode), salt)
-        }
-        require(pair != address(0), "Create2: Failed on deploy");
+        // assembly {
+        //     pair := create2(0, add(bytecode, 20), mload(bytecode), salt)
+        // }
 
-        console.log(">>> new pair address: ", pair);
+        XniswapV2Pair pair = new XniswapV2Pair{salt: salt}();
+        pairAddress = address(pair);
+        require(pairAddress != address(0), "pair == address(0) -> Create2 failed on deploy!");
 
-        IXniswapV2Pair(pair).initialize(tokenA_, tokenB_);
+        console.log(">>> pairAddress: ", pairAddress);
+
+        pair.initialize(tokenA_, tokenB_);
 
         console.log(">>> pair initialized");
 
-        pairs[tokenA_][tokenB_] = pair;
-        pairs[tokenB_][tokenA_] = pair;
+        pairs[tokenA_][tokenB_] = pairAddress;
+        pairs[tokenB_][tokenA_] = pairAddress;
 
-        allPairs.push(pair);
+        allPairs.push(pairAddress);
 
         console.log(">>> PairCreated! ");
 
-        emit PairCreated(tokenA_, tokenB_, pair, allPairs.length);
+        emit PairCreated(tokenA_, tokenB_, pairAddress, allPairs.length);
     }
 }

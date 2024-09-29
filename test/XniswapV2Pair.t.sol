@@ -14,7 +14,7 @@ contract XniswapV2PairTest is Test {
     function setUp() public {
         tokenA = new ERC20Mintable("Token A", "TKNA");
         tokenB = new ERC20Mintable("Token B", "TKNB");
-        pair = new XniswapV2Pair(address(tokenA), address(tokenB));
+        pair = new XniswapV2Pair();
 
         tokenA.mint(10 ether, address(this));
         tokenB.mint(10 ether, address(this));
