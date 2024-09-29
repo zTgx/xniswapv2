@@ -43,6 +43,15 @@ contract XniswapV2LibTest is Test {
         assertEq(XniswapV2Lib.min(2, 1), 1);
     }
 
+    function testSortTokenAddress() public pure {
+        address tokenA = 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a;
+        address tokenB = 0x2e234DAe75C793f67A35089C9d99245E1C58470b;
+
+        (address tokenA_, address tokenB_) = XniswapV2Lib.sortTokenAddress(tokenA, tokenB);
+        assertEq(tokenA_, tokenB);
+        assertEq(tokenB_, tokenA);
+    }
+
     function testGetReserves() public {
         tokenA.transfer(address(pair), 1.1 ether);
         tokenB.transfer(address(pair), 0.8 ether);
