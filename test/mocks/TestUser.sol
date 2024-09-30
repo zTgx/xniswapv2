@@ -4,7 +4,6 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import "../../src/XniswapV2Pair.sol";
 import "./ERC20Mintable.sol";
-import "../../src/UQ112x112.sol";
 
 contract TestUser {
     function addLiquidity(

@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {console} from "forge-std/console.sol";
 import "./XniswapV2Pair.sol";
-import "./XniswapV2Lib.sol";
+import "./utils/XniswapV2Lib.sol";
 
 contract XniswapV2Factory {
     mapping(address => mapping(address => address)) public pairs;

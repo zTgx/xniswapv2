@@ -5,7 +5,7 @@ import "solmate/tokens/ERC20.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 import "./interface/IXniswapV2Pair.sol";
 import "./interface/IXniswapV2Factory.sol";
-import {XniswapV2Lib} from "./XniswapV2Lib.sol";
+import {XniswapV2Lib} from "./utils/XniswapV2Lib.sol";
 
 contract XniswapV2Router {
     error InsufficientAAmount();

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.13;
 
-import {XniswapV2Pair} from "./XniswapV2Pair.sol";
-import "./interface/IXniswapV2Pair.sol";
-import "./interface/IXniswapV2Factory.sol";
+import {XniswapV2Pair} from "../XniswapV2Pair.sol";
+import "../interface/IXniswapV2Pair.sol";
+import "../interface/IXniswapV2Factory.sol";
 
 library XniswapV2Lib {
     error InsufficientAmount();
