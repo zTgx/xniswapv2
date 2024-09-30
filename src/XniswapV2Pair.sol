@@ -32,12 +32,12 @@ contract XniswapV2Pair is ERC20, ReentrancyGuard {
     }
 
     function initialize(address _tokenA, address _tokenB) public {
-        console.log(">>> msg.sender: ", msg.sender);
-        console.log(">>> factory   : ", factory);
+        // console.log(">>> msg.sender: ", msg.sender);
+        // console.log(">>> factory   : ", factory);
 
         require(msg.sender == factory, "XniswapV2: FORBIDDEN");
 
-        console.log(">>> XniswapV2Pair initialized!");
+        // console.log(">>> XniswapV2Pair initialized!");
 
         tokenA = _tokenA;
         tokenB = _tokenB;
@@ -51,9 +51,17 @@ contract XniswapV2Pair is ERC20, ReentrancyGuard {
      *     L -> Liquidity parameter
      */
     function mint(address to) public {
+        console.log("[Pair] mint to : ", to);
+
         (uint112 reserveA_, uint112 reserveB_,) = getReserves();
+        // console.log("[Pair] reserveA_: ", reserveA_);
+        // console.log("[Pair] reserveB_: ", reserveB_);
+
+        console.log("[Pair] pair address : ", address(this));
         uint256 balanceA = ERC20(tokenA).balanceOf(address(this));
         uint256 balanceB = ERC20(tokenB).balanceOf(address(this));
+        console.log("[Pair] balanceA: ", balanceA);
+        console.log("[Pair] balanceB: ", balanceB);
 
         uint256 amountA = balanceA - reserveA_;
         uint256 amountB = balanceB - reserveB_;
@@ -63,6 +71,8 @@ contract XniswapV2Pair is ERC20, ReentrancyGuard {
         if (totalSupply == 0) {
             liquidity = FixedPointMathLib.sqrt(amountA * amountB) - MINIMUM_LIQUIDITY;
 
+            console.log("[Pair] Bootstrap LP tokens: ", liquidity);
+
             _mint(address(0), MINIMUM_LIQUIDITY);
         } else {
             /**
@@ -71,6 +81,8 @@ contract XniswapV2Pair is ERC20, ReentrancyGuard {
              * case3: b / a < B / A
              */
             liquidity = XniswapV2Lib.min((amountA * totalSupply) / reserveA_, (amountB * totalSupply) / reserveB_);
+
+            console.log("[Pair] add LP Tokens: ", liquidity);
         }
 
         // q = min(a / A, b / B)
@@ -139,7 +151,7 @@ contract XniswapV2Pair is ERC20, ReentrancyGuard {
     }
 
     // private functions
-    function _update(uint256 _balanceA, uint256 _balanceB, uint112, uint112) private {
+    function _update(uint256 _balanceA, uint256 _balanceB, uint112 reserveA_, uint112 reserveB_) private {
         reserveA = uint112(_balanceA);
         reserveB = uint112(_balanceB);
         blockTimestampLast = uint32(block.timestamp);

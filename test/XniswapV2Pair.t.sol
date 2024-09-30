@@ -5,8 +5,11 @@ import {Test, console} from "forge-std/Test.sol";
 import "./mocks/ERC20Mintable.sol";
 import "./mocks/Flashloaner.sol";
 import {XniswapV2Pair} from "../src/XniswapV2Pair.sol";
+import {XniswapV2Factory} from "../src/XniswapV2Factory.sol";
+import {XniswapV2Lib} from "../src/utils/XniswapV2Lib.sol";
 
 contract XniswapV2PairTest is Test {
+    XniswapV2Factory factory;
     XniswapV2Pair public pair;
     ERC20Mintable tokenA;
     ERC20Mintable tokenB;
@@ -14,10 +17,26 @@ contract XniswapV2PairTest is Test {
     function setUp() public {
         tokenA = new ERC20Mintable("Token A", "TKNA");
         tokenB = new ERC20Mintable("Token B", "TKNB");
-        pair = new XniswapV2Pair();
+        tokenA.mint(100 ether, address(this));
+        tokenB.mint(100 ether, address(this));
 
-        tokenA.mint(10 ether, address(this));
-        tokenB.mint(10 ether, address(this));
+        factory = new XniswapV2Factory();
+        address pairAddress = factory.newPair(address(tokenA), address(tokenB));
+        console.log("[Setup] pair address: ", pairAddress);
+
+        pair = XniswapV2Pair(pairAddress);
+    }
+
+    function assertReserves(uint112 expectedReserve0, uint112 expectedReserve1) internal view {
+        (uint112 reserve0, uint112 reserve1,) = pair.getReserves();
+        assertEq(reserve0, expectedReserve0, "unexpected reserve0");
+        assertEq(reserve1, expectedReserve1, "unexpected reserve1");
+    }
+
+    function assertBlockTimestampLast(uint32 expected) internal view {
+        (,, uint32 blockTimestampLast) = pair.getReserves();
+
+        assertEq(blockTimestampLast, expected, "unexpected blockTimestampLast");
     }
 
     function getReservesWorks(uint112 expectedReserveA, uint112 expectedReserveB) internal view {
@@ -46,5 +65,64 @@ contract XniswapV2PairTest is Test {
 
         assertEq(tokenA.balanceOf(address(fl)), 0);
         assertEq(tokenA.balanceOf(address(pair)), 2 ether + flashloanFee);
+    }
+
+    function testMintBasic() public {
+        tokenA.transfer(address(pair), 1 ether);
+        tokenB.transfer(address(pair), 1 ether);
+
+        pair.mint(address(this));
+
+        assertEq(pair.balanceOf(address(this)), 1 ether - 1000);
+        assertReserves(1 ether, 1 ether);
+        assertEq(pair.totalSupply(), 1 ether);
+    }
+
+    function testMintWhenThereIsLiquidity() public {
+        tokenA.transfer(address(pair), 1 ether);
+        tokenB.transfer(address(pair), 1 ether);
+
+        pair.mint(address(this)); // + 1 LP
+
+        tokenA.transfer(address(pair), 2 ether);
+        tokenB.transfer(address(pair), 2 ether);
+
+        pair.mint(address(this)); // + 2 LP
+
+        assertEq(pair.balanceOf(address(this)), 3 ether - 1000);
+        assertEq(pair.totalSupply(), 3 ether);
+        assertReserves(3 ether, 3 ether);
+    }
+
+    function testMintUnbalanced() public {
+        // the token pair will be sorted in inner factory
+        (address token0, address token1) = XniswapV2Lib.sortTokenAddress(address(tokenA), address(tokenB));
+
+        ERC20(token0).transfer(address(pair), 1 ether);
+        ERC20(token1).transfer(address(pair), 1 ether);
+
+        pair.mint(address(this)); // + 1 LP
+        assertEq(pair.balanceOf(address(this)), 1 ether - 1000);
+        assertReserves(1 ether, 1 ether);
+
+        ERC20(token0).transfer(address(pair), 2 ether);
+        console.log("[PairTest] pair balance of token0:", ERC20(token0).balanceOf(address(pair)));
+        ERC20(token1).transfer(address(pair), 1 ether);
+        console.log("[PairTest] pair balance of TokenB:", ERC20(token1).balanceOf(address(pair)));
+
+        pair.mint(address(this)); // + 1 LP
+        assertEq(pair.balanceOf(address(this)), 2 ether - 1000);
+        assertReserves(3 ether, 2 ether);
+    }
+
+    function testMintZeroLiquidity() public {
+        // the token pair will be sorted in inner factory
+        (address token0, address token1) = XniswapV2Lib.sortTokenAddress(address(tokenA), address(tokenB));
+
+        ERC20(token0).transfer(address(pair), 1000);
+        ERC20(token1).transfer(address(pair), 1000);
+
+        vm.expectRevert(abi.encodePacked("Insufficient liquidity minted"));
+        pair.mint(address(this));
     }
 }
