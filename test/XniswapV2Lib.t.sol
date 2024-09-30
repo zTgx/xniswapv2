@@ -3,9 +3,9 @@ pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
 import {XniswapV2Lib} from "../src/XniswapV2Lib.sol";
-import "./mocks/ERC20Mintable.sol";
 import {XniswapV2Factory} from "../src/XniswapV2Factory.sol";
 import {XniswapV2Pair} from "../src/XniswapV2Pair.sol";
+import "./mocks/ERC20Mintable.sol";
 
 contract XniswapV2LibTest is Test {
     XniswapV2Factory factory;

@@ -2,9 +2,9 @@
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
-import {XniswapV2Pair} from "../src/XniswapV2Pair.sol";
 import "./mocks/ERC20Mintable.sol";
 import "./mocks/Flashloaner.sol";
+import {XniswapV2Pair} from "../src/XniswapV2Pair.sol";
 
 contract XniswapV2PairTest is Test {
     XniswapV2Pair public pair;

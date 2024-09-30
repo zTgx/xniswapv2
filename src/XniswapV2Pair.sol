@@ -2,12 +2,12 @@
 pragma solidity ^0.8.13;
 
 import "solmate/tokens/ERC20.sol";
-import {ReentrancyGuard} from "solmate/utils/ReentrancyGuard.sol";
 import "solmate/utils/FixedPointMathLib.sol";
-import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
-import "./IXniswapV2Callee.sol";
-import "./XniswapV2Lib.sol";
 import {console} from "forge-std/console.sol";
+import {ReentrancyGuard} from "solmate/utils/ReentrancyGuard.sol";
+import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
+import "./interface/IXniswapV2Callee.sol";
+import "./XniswapV2Lib.sol";
 
 contract XniswapV2Pair is ERC20, ReentrancyGuard {
     address public factory;

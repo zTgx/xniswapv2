@@ -14,25 +14,15 @@ contract XniswapV2Factory {
     function newPair(address tokenA, address tokenB) public returns (address pairAddress) {
         require(tokenA != tokenB, "Identical Address");
 
-        console.log(">>> tokenA: ", tokenA);
-        console.log(">>> tokenB: ", tokenB);
-        (address tokenA_, address tokenB_) = XniswapV2Lib.sortTokenAddress(tokenA, tokenB); // tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-        console.log(">>> tokenA_: ", tokenA_);
-        console.log(">>> tokenB_: ", tokenB_);
+        (address tokenA_, address tokenB_) = XniswapV2Lib.sortTokenAddress(tokenA, tokenB);
 
         require(tokenA_ != address(0), "Zero Address");
         require(pairs[tokenA_][tokenB_] == address(0), "Pair Exists");
 
-        // bytes memory bytecode = type(XniswapV2Pair).creationCode;
-        // console.logBytes(bytecode);
-        // console.logBytes32(salt);
-
-        // assembly {
-        //     pair := create2(0, add(bytecode, 20), mload(bytecode), salt)
-        // }
-
+        // By using create2
         bytes32 salt = keccak256(abi.encodePacked(tokenA_, tokenB_));
         XniswapV2Pair pair = new XniswapV2Pair{salt: salt}();
+
         pairAddress = address(pair);
         require(pairAddress != address(0), "pair == address(0) -> Create2 failed on deploy!");
 
