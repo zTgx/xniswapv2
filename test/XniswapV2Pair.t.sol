@@ -106,9 +106,7 @@ contract XniswapV2PairTest is Test {
         assertReserves(1 ether, 1 ether);
 
         ERC20(token0).transfer(address(pair), 2 ether);
-        console.log("[PairTest] pair balance of token0:", ERC20(token0).balanceOf(address(pair)));
         ERC20(token1).transfer(address(pair), 1 ether);
-        console.log("[PairTest] pair balance of TokenB:", ERC20(token1).balanceOf(address(pair)));
 
         pair.mint(address(this)); // + 1 LP
         assertEq(pair.balanceOf(address(this)), 2 ether - 1000);
@@ -124,5 +122,31 @@ contract XniswapV2PairTest is Test {
 
         vm.expectRevert(abi.encodePacked("Insufficient liquidity minted"));
         pair.mint(address(this));
+    }
+
+    function testBurnBasic() public {
+        // the token pair will be sorted in inner factory
+        (address token0, address token1) = XniswapV2Lib.sortTokenAddress(address(tokenA), address(tokenB));
+
+        ERC20(token0).transfer(address(pair), 1 ether);
+        ERC20(token1).transfer(address(pair), 1 ether);
+
+        pair.mint(address(this)); // + 1 LP
+        assertEq(pair.balanceOf(address(this)), 1 ether - 1000);
+        assertReserves(1 ether, 1 ether);
+
+        // Transfer LP token to pair contract!!!
+        uint256 lpToken = ERC20(pair).balanceOf(address(this));
+
+        ERC20(pair).transfer(address(pair), lpToken);
+
+        pair.burn(address(this));
+
+        assertEq(pair.balanceOf(address(this)), 0);
+
+        assertReserves(1000, 1000);
+        assertEq(pair.totalSupply(), 1000);
+        assertEq(ERC20(token0).balanceOf(address(this)), 100 ether - 1000);
+        assertEq(ERC20(token1).balanceOf(address(this)), 100 ether - 1000);
     }
 }

@@ -103,19 +103,27 @@ contract XniswapV2Pair is ERC20, ReentrancyGuard {
         uint256 balanceA = ERC20(tokenA).balanceOf(address(this));
         uint256 balanceB = ERC20(tokenB).balanceOf(address(this));
 
+        // liquidity: is the liquidity amount received from LiquidityProvider
         uint256 liquidity = balanceOf[address(this)];
+        console.log("[Pair] need to be burned amount (LPTokens): ", liquidity);
 
         uint256 amountA = liquidity * (balanceA / totalSupply);
+        console.log("[Pair] balanceA: ", balanceA);
+        console.log("[Pair] totalSupply: ", totalSupply);
+        console.log("[Pair] amountA: ", amountA);
         uint256 amountB = liquidity * (balanceB / totalSupply);
 
-        require(amountA > 0 && amountB > 0, "XniswapV2: INSUFFICIENT_LIQUIDITY_BURNED");
+        require(amountA > 0 && amountB > 0, "INSUFFICIENT_LIQUIDITY_BURNED");
 
+        // burn this liquidity
         _burn(address(this), liquidity);
 
         SafeTransferLib.safeTransfer(ERC20(tokenA), to, amountA);
         SafeTransferLib.safeTransfer(ERC20(tokenB), to, amountB);
 
         balanceA = ERC20(tokenA).balanceOf(address(this));
+        console.log("[Pair] balanceA: ", balanceA);
+
         balanceB = ERC20(tokenB).balanceOf(address(this));
 
         (uint112 reserveA_, uint112 reserveB_,) = getReserves();
