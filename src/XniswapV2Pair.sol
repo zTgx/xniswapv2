@@ -132,23 +132,43 @@ contract XniswapV2Pair is ERC20, ReentrancyGuard {
         emit Burn(msg.sender, amountA, amountB, to);
     }
 
+    // Compiler error (/solidity/libsolidity/codegen/LValue.cpp:51):Stack too deep.
     function swap(uint256 amountAOut, uint256 amountBOut, address to, bytes calldata data) public nonReentrant {
         require(amountAOut != 0 || amountBOut != 0, "InsufficientOutputAmount");
 
         (uint112 reserveA_, uint112 reserveB_,) = getReserves();
         require(amountAOut <= reserveA_ && amountBOut <= reserveB_, "InsufficientLiquidity");
 
-        uint256 balanceA = ERC20(tokenA).balanceOf(address(this)) - amountAOut;
-        uint256 balanceB = ERC20(tokenB).balanceOf(address(this)) - amountBOut;
+        uint256 balanceA;
+        uint256 balanceB;
+        {
+            address _token0 = tokenA;
+            address _token1 = tokenB;
+            require(to != _token0 && to != _token1, "INVALID_TO");
 
-        // the product of reserves after a swap must be equal or greater than that before the swap
-        require(balanceA * balanceB >= uint256(reserveA_) * uint256(reserveB_), "Invalid L(L means L * L = X * Y)");
+            if (amountAOut > 0) SafeTransferLib.safeTransfer(ERC20(tokenA), to, amountAOut);
+            if (amountBOut > 0) SafeTransferLib.safeTransfer(ERC20(tokenB), to, amountBOut);
+            if (data.length > 0) IXniswapV2Callee(to).call(msg.sender, amountAOut, amountBOut, data);
+
+            balanceA = ERC20(tokenA).balanceOf(address(this));
+            balanceB = ERC20(tokenB).balanceOf(address(this));
+
+            uint256 amount0In = balanceA > reserveA_ - amountAOut ? balanceA - (reserveA_ - amountAOut) : 0;
+            uint256 amount1In = balanceB > reserveB_ - amountBOut ? balanceB - (reserveB_ - amountBOut) : 0;
+            require(amount0In != 0 || amount1In != 0, "InsufficientOutputAmount");
+
+            // Adjusted = balance before swap - swap fee;
+            uint256 balance0Adjusted = (balanceA * 1000) - (amount0In * 3);
+            uint256 balance1Adjusted = (balanceB * 1000) - (amount1In * 3);
+
+            // the product of reserves after a swap must be equal or greater than that before the swap
+            require(
+                balance0Adjusted * balance1Adjusted >= uint256(reserveA_) * uint256(reserveB_) * (1000 ** 2),
+                "Invalid L(L means L * L = X * Y)"
+            );
+        }
 
         _update(balanceA, balanceB, reserveA_, reserveB_);
-
-        if (amountAOut > 0) SafeTransferLib.safeTransfer(ERC20(tokenA), to, amountAOut);
-        if (amountBOut > 0) SafeTransferLib.safeTransfer(ERC20(tokenB), to, amountBOut);
-        if (data.length > 0) IXniswapV2Callee(to).call(msg.sender, amountAOut, amountBOut, data);
 
         emit Swap(msg.sender, amountAOut, amountBOut, to);
     }

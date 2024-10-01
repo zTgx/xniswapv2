@@ -149,4 +149,39 @@ contract XniswapV2PairTest is Test {
         assertEq(ERC20(token0).balanceOf(address(this)), 100 ether - 1000);
         assertEq(ERC20(token1).balanceOf(address(this)), 100 ether - 1000);
     }
+
+    function testBurnZeroLiquidity() public {
+        (address token0, address token1) = XniswapV2Lib.sortTokenAddress(address(tokenA), address(tokenB));
+
+        ERC20(token0).transfer(address(pair), 1 ether);
+        ERC20(token1).transfer(address(pair), 1 ether);
+        pair.mint(address(this));
+
+        // msg.sender
+        vm.prank(address(0x1234));
+        vm.expectRevert(abi.encodePacked("INSUFFICIENT_LIQUIDITY_BURNED"));
+        pair.burn(address(this));
+    }
+
+    function testSwapBasic() public {
+        (address token0, address token1) = XniswapV2Lib.sortTokenAddress(address(tokenA), address(tokenB));
+
+        ERC20(token0).transfer(address(pair), 1 ether);
+        ERC20(token1).transfer(address(pair), 2 ether);
+        pair.mint(address(this));
+
+        uint256 amountOut = 0.181322178776029826 ether;
+        ERC20(token0).transfer(address(pair), 0.1 ether);
+        pair.swap(0, amountOut, address(this), "");
+
+        uint256 token0Balance = ERC20(token0).balanceOf(address(this));
+        console.log(">>> token0Balance: ", token0Balance);
+        assertEq(token0Balance, 100 ether - 1 ether - 0.1 ether, "unexpected token0 balance");
+
+        uint256 token1Balance = ERC20(token1).balanceOf(address(this));
+        console.log(">>> token1Balance: ", token1Balance);
+
+        assertEq(token1Balance, 100 ether - 2 ether + amountOut, "unexpected token1 balance");
+        assertReserves(1 ether + 0.1 ether, uint112(2 ether - amountOut));
+    }
 }
