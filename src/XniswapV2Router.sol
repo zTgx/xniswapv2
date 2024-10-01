@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import "solmate/tokens/ERC20.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
+import {console} from "forge-std/console.sol";
 import "./interface/IXniswapV2Pair.sol";
 import "./interface/IXniswapV2Factory.sol";
 import {XniswapV2Lib} from "./utils/XniswapV2Lib.sol";
@@ -27,18 +28,30 @@ contract XniswapV2Router {
         uint256 amountBMin,
         address to //the address that receives LP-tokens
     ) public returns (uint256 amountA, uint256 amountB, uint256 liquidity) {
-        if (factory.pairs(tokenA, tokenB) == address(0)) {
-            factory.createPair(tokenA, tokenB);
+        console.log("[Router] Add liquidity.");
+
+        address existedAddress = factory.pairs(tokenA, tokenB);
+        console.log("[Router] pair existed: ", existedAddress);
+
+        if (existedAddress == address(0)) {
+            console.log("[Router] create new pair: ", tokenA, "<=>", tokenB);
+            address pairAddress_ = factory.newPair(tokenA, tokenB);
+            console.log("[Router] pairAddress: ", pairAddress_);
         }
 
         (amountA, amountB) = _calcLiquidity(tokenA, tokenB, amountADeposit, amountBDeposit, amountAMin, amountBMin);
+        console.log("[Router] amountA: ", amountA);
+        console.log("[Router] amountB: ", amountB);
 
         address pairAddress = XniswapV2Lib.getPairAddress(address(factory), tokenA, tokenB);
+        console.log("[Router] get pairAddress: ", pairAddress);
 
         SafeTransferLib.safeTransferFrom(ERC20(tokenA), msg.sender, pairAddress, amountA);
         SafeTransferLib.safeTransferFrom(ERC20(tokenB), msg.sender, pairAddress, amountB);
 
         liquidity = IXniswapV2Pair(pairAddress).mint(to);
+
+        console.log("[Router] liquidity added!");
     }
 
     function removeLiquidity(

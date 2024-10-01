@@ -50,7 +50,7 @@ contract XniswapV2Pair is ERC20, ReentrancyGuard {
      *     Y -> Reserve of TokenB
      *     L -> Liquidity parameter
      */
-    function mint(address to) public {
+    function mint(address to) public returns (uint256 liquidity) {
         console.log("[Pair] mint to : ", to);
 
         (uint112 reserveA_, uint112 reserveB_,) = getReserves();
@@ -67,7 +67,6 @@ contract XniswapV2Pair is ERC20, ReentrancyGuard {
         uint256 amountB = balanceB - reserveB_;
 
         // LP-token the liquidity provider received after add liquidity.
-        uint256 liquidity;
         if (totalSupply == 0) {
             liquidity = FixedPointMathLib.sqrt(amountA * amountB) - MINIMUM_LIQUIDITY;
 
@@ -94,6 +93,8 @@ contract XniswapV2Pair is ERC20, ReentrancyGuard {
         _mint(to, liquidity);
 
         _update(balanceA, balanceB, reserveA_, reserveB_);
+
+        console.log("[Pair] minted!");
 
         emit Mint(to, amountA, amountB);
     }
