@@ -41,4 +41,11 @@ contract XniswapV2FactoryTest is Test {
         uint256 pairsLength = factory.allPairsLength();
         assertTrue(pairsLength == 1);
     }
+
+    function test_AllPairs() public {
+        address pairAddress = factory.newPair(address(token1), address(token0));
+        uint256 pairsLength = factory.allPairsLength();
+        address expectedAddress = factory.allPairs(pairsLength - 1);
+        assertTrue(pairAddress == expectedAddress);
+    }
 }
