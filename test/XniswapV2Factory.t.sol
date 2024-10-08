@@ -17,7 +17,6 @@ contract XniswapV2FactoryTest is Test {
 
         token0 = new ERC20Mintable("Token A", "TKNA");
         token0.mint(10 ether, address(this));
-        console.log(">>> balance of address(this): ", token0.balanceOf(address(this)));
 
         token1 = new ERC20Mintable("Token B", "TKNB");
         token1.mint(10 ether, address(this));
@@ -30,5 +29,16 @@ contract XniswapV2FactoryTest is Test {
 
         assertEq(pair.tokenA(), address(token0));
         assertEq(pair.tokenB(), address(token1));
+    }
+
+    function test_ZeroPairsLength() public view {
+        uint256 pairsLength = factory.allPairsLength();
+        assertTrue(pairsLength == 0);
+    }
+
+    function test_NonZeroPairsLength() public {
+        factory.newPair(address(token1), address(token0));
+        uint256 pairsLength = factory.allPairsLength();
+        assertTrue(pairsLength == 1);
     }
 }

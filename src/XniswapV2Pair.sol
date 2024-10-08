@@ -35,9 +35,7 @@ contract XniswapV2Pair is ERC20, ReentrancyGuard {
         // console.log(">>> msg.sender: ", msg.sender);
         // console.log(">>> factory   : ", factory);
 
-        require(msg.sender == factory, "XniswapV2: FORBIDDEN");
-
-        // console.log(">>> XniswapV2Pair initialized!");
+        require(msg.sender == factory, "FORBIDDEN: msg.sender MUST BE factory address");
 
         tokenA = _tokenA;
         tokenB = _tokenB;
