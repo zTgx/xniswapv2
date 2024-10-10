@@ -134,7 +134,7 @@ contract XniswapV2Router {
     function _swap(uint256[] memory amounts, address[] memory path, address to_) internal {
         for (uint256 i; i < path.length; i++) {
             (address input, address output) = (path[i], path[i + 1]);
-            (address token0,) = XniswapV2Lib.sortPair(input, output);
+            (address token0,) = XniswapV2Lib.sortTokenAddress(input, output);
             uint256 amountOut = amounts[i + 1];
             (uint256 amount0Out, uint256 amount1Out) =
                 input == token0 ? (uint256(0), amountOut) : (amountOut, uint256(0));

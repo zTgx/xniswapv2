@@ -22,16 +22,12 @@ library XniswapV2Lib {
         return (tokenA_, tokenB_);
     }
 
-    function sortPair(address tokenA, address tokenB) internal pure returns (address, address) {
-        return tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-    }
-
     function getPairAddress(address factoryAddress, address tokenA, address tokenB)
         internal
         pure
         returns (address pairAddress)
     {
-        (address tokenA_, address tokenB_) = sortPair(tokenA, tokenB);
+        (address tokenA_, address tokenB_) = sortTokenAddress(tokenA, tokenB);
 
         // create2:
         // https://eips.ethereum.org/EIPS/eip-1014
@@ -56,7 +52,7 @@ library XniswapV2Lib {
         public
         returns (uint256 reserveA, uint256 reserveB)
     {
-        (address token0, address token1) = sortPair(tokenA, tokenB);
+        (address token0, address token1) = sortTokenAddress(tokenA, tokenB);
         (uint256 reserve0, uint256 reserve1,) =
             IXniswapV2Pair(getPairAddress(factoryAddress, token0, token1)).getReserves();
         (reserveA, reserveB) = tokenA == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
