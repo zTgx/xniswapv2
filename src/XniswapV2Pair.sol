@@ -8,8 +8,11 @@ import {ReentrancyGuard} from "solmate/utils/ReentrancyGuard.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 import "./interface/IXniswapV2Callee.sol";
 import "./utils/XniswapV2Lib.sol";
+import "./utils/UQ112x112.sol";
 
 contract XniswapV2Pair is ERC20, ReentrancyGuard {
+    using UQ112x112 for uint224;
+
     address public factory;
     address public tokenA;
     address public tokenB;
@@ -19,9 +22,15 @@ contract XniswapV2Pair is ERC20, ReentrancyGuard {
     uint112 private reserveB;
     uint32 private blockTimestampLast;
 
-    uint256 constant MINIMUM_LIQUIDITY = 1000;
+    // https://docs.uniswap.org/contracts/v2/concepts/protocol-overview/smart-contracts#minimum-liquidity
+    // To ameliorate rounding errors and increase the theoretical minimum tick size for liquidity provision,
+    // pairs burn the first MINIMUM_LIQUIDITY pool tokens
+    uint256 public constant MINIMUM_LIQUIDITY = 1000;
 
-    // TODO: add events here
+    uint256 public price0CumulativeLast;
+    uint256 public price1CumulativeLast;
+    uint256 public kLast; // reserveA * reserveB
+
     event Mint(address indexed sender, uint256 amountA, uint256 amountB);
     event Burn(address indexed sender, uint256 amountA, uint256 amountB, address indexed to);
     event Update(uint256 _reserveA, uint256 _reserveB, uint32 _blockTimestampLast);
@@ -172,12 +181,10 @@ contract XniswapV2Pair is ERC20, ReentrancyGuard {
         emit Swap(msg.sender, amountAOut, amountBOut, to);
     }
 
-    // Utils
     function getReserves() public view returns (uint112, uint112, uint32) {
         return (reserveA, reserveB, blockTimestampLast);
     }
 
-    // private functions
     function _update(uint256 _balanceA, uint256 _balanceB, uint112 reserveA_, uint112 reserveB_) private {
         reserveA = uint112(_balanceA);
         reserveB = uint112(_balanceB);
